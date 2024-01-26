@@ -109,21 +109,26 @@ class GameController {
     }
 
     makeMove(row, col) {
-        if (!this.gameOver) {
+        let resultMessage = '';
+
+        if (this.gameOver) {
+            resultMessage = 'Game is over!';
+        } else {
             const currentPlayer = this.players[this.currentPlayerIndex];
             const moveSuccess = this.gameboard.makeMove(row, col, currentPlayer.getSymbol());
-            if (moveSuccess) {
+            if (!moveSuccess) {
+                resultMessage = 'Invalid move. Try again';
+            } else {
                 this.checkGameStatus();
+
                 if (!this.gameOver) {
                     this.switchPlayer();
-                    console.log(`${this.players[this.currentPlayerIndex].getSymbol()}'s turn`)
+                    resultMessage = `${this.players[this.currentPlayerIndex].getSymbol()}'s turn`;
                 }
-            } else {
-                console.log('Invalid move. Try again.')
+
             }
-        } else {
-            console.log('Game is over!')
         }
+        return { message: resultMessage, success: !this.gameOver};
     }
 
     getCurrentPlayer() {
@@ -139,9 +144,11 @@ class GameController {
             const winner = this.players[this.currentPlayerIndex];
             console.log(`Player ${winner.getSymbol()} wins!`);
             this.gameOver = true;
+            return `Player ${winner.getSymbol()} wins!`;
         } else if (this.gameboard.isBoardFull()) {
             console.log('It\'s a tie!');
             this.gameOver = true;
+            return "It's a tie!";
         }
     }
 
@@ -155,8 +162,13 @@ class GameController {
     getCurrentBoard() {
         return this.gameboard.getBoard();
     }
+
+    getGameStatus() {
+        return this.gameOver;
+    }
 }
 
+// create EventListeners, adds symbol, 
 class UserInterface {
     constructor(gameController) {
         this.gameController = gameController;
@@ -168,9 +180,18 @@ class UserInterface {
 
         tiles.forEach(tile => {
             tile.addEventListener('click', (event) => {
-                console.log('hello');
-            })
-        })
+                const colValue = tile.dataset.col;
+                const rowValue = tile.dataset.row;
+                this.handleSquareClick(colValue, rowValue, tile);
+            });
+        });
+    }
+
+    handleSquareClick(row, col, tile) {
+        if (!this.gameController.getGameStatus()) {
+            tile.textContent = this.gameController.getCurrentPlayer().getSymbol();
+            this.gameController.makeMove(col, row, tile);
+        }   
     }
 
 }
